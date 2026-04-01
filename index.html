@@ -400,6 +400,7 @@
     </div>
 
     <input type="text" class="config-input" id="script-url-input" placeholder="https://script.google.com/macros/s/XXXXXX/exec">
+    <input type="text" class="config-input" id="script-token-input" placeholder="Token de segurança (ex: prohouse2025)">
     <button class="config-btn" onclick="saveScriptUrl()">✓ Salvar e conectar</button>
   </div>
 </div>
@@ -430,7 +431,8 @@ const DATA = [{"empresa":"PROJECON - PROJETOS E CONSTRUCOES LTDA","fantasia":"PR
 // STATE
 // ============================================================
 let leads = DATA.map((d,i) => ({...d, id: i, ligado: false, obs: ''}));
-let scriptUrl = localStorage.getItem('leads_script_url') || '';
+let scriptUrl = localStorage.getItem("leads_script_url") || "";
+let scriptToken = localStorage.getItem("leads_script_token") || "";
 let remoteData = {};
 let syncOk = false;
 
@@ -456,7 +458,7 @@ function jsonpCall(params) {
       resolve(data);
     };
 
-    const p = { ...params, callback: cbName };
+    const p = { ...params, callback: cbName, token: scriptToken };
     const url = scriptUrl + '?' + new URLSearchParams(p).toString();
     const script = document.createElement('script');
     script.id = 'jsonp-' + cbName;
@@ -524,6 +526,7 @@ function setSyncStatus(state, label) {
 // ============================================================
 function openConfig() {
   document.getElementById('script-url-input').value = scriptUrl;
+  document.getElementById('script-token-input').value = scriptToken;
   document.getElementById('config-overlay').classList.add('open');
 }
 
@@ -533,6 +536,10 @@ function closeConfigModal(e) {
 }
 
 async function saveScriptUrl() {
+  const token = document.getElementById('script-token-input').value.trim();
+  if (!token) return showToast('Digite o token de segurança', 'err');
+  scriptToken = token;
+  localStorage.setItem('leads_script_token', token);
   const url = document.getElementById('script-url-input').value.trim();
   if (!url) return showToast('Cole a URL do Apps Script primeiro', 'err');
   scriptUrl = url;
