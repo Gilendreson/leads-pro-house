@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Pro House V1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #11141c;
+    --surface2: #181c27;
+    --border: #22283a;
+    --accent: #00e5a0;
+    --accent2: #4f8fff;
+    --accent3: #ff6b35;
+    --warn: #ffcc44;
+    --text: #e8eaf0;
+    --muted: #6b7494;
+    --micro: #6b7494;
+    --epp: #4f8fff;
+    --medio: #a855f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .logo-version { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); background: var(--border); padding: 2px 7px; border-radius: 4px; }
+  .sync-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 5px 11px; border-radius: 6px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sync-status:hover { border-color: var(--accent); color: var(--accent); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
+  .sync-dot.ok { background: var(--accent); }
+  .sync-dot.err { background: var(--accent3); }
+  .sync-dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .header-stats { display: flex; gap: 28px; align-items: center; }
+  .hstat { text-align: right; }
+  .hstat-num { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--accent); line-height: 1; }
+  .hstat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+  .hstat-div { width: 1px; height: 36px; background: var(--border); }
+
+  /* MAIN */
+  .main { display: flex; height: calc(100vh - 61px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-width: 240px; background: var(--surface);
+    border-right: 1px solid var(--border); padding: 20px 16px;
+    overflow-y: auto; display: flex; flex-direction: column; gap: 22px;
+  }
+  .sidebar-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+  .search-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 9px 12px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; background: transparent; border: 1px solid transparent;
+    border-radius: 6px; padding: 7px 10px; color: var(--muted);
+    font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer;
+    transition: all 0.15s; margin-bottom: 3px;
+  }
+  .filter-btn:hover { background: var(--surface2); color: var(--text); }
+  .filter-btn.active { background: rgba(0,229,160,0.08); border-color: rgba(0,229,160,0.2); color: var(--accent); }
+  .filter-btn .count { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--border); padding: 1px 6px; border-radius: 10px; }
+  .filter-btn.active .count { background: rgba(0,229,160,0.15); color: var(--accent); }
+  .porte-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 7px; flex-shrink: 0; }
+  .porte-micro { background: var(--micro); }
+  .porte-epp { background: var(--epp); }
+  .porte-medio { background: var(--medio); }
+  .cidade-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; background: transparent; border: none;
+    padding: 5px 10px; color: var(--muted); font-family: 'Inter', sans-serif;
+    font-size: 12px; cursor: pointer; border-radius: 5px; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .cidade-btn:hover { background: var(--surface2); color: var(--text); }
+  .cidade-btn.active { color: var(--accent2); background: rgba(79,143,255,0.07); }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.4s; }
+  .progress-label { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+  .toolbar-left { display: flex; gap: 8px; align-items: center; }
+  .sort-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .sort-btn:hover, .sort-btn.active { border-color: var(--accent); color: var(--accent); }
+  .result-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .result-count span { color: var(--accent); }
+  .clear-btn { background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.2); border-radius: 6px; padding: 6px 12px; color: var(--accent3); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; display: none; }
+  .clear-btn.visible { display: block; }
+
+  /* CARDS */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; cursor: pointer;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--border); transition: background 0.2s; }
+  .card:hover { border-color: rgba(0,229,160,0.25); transform: translateY(-1px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+  .card:hover::before { background: var(--accent); }
+  .card.ligado { border-color: rgba(0,229,160,0.3); background: rgba(0,229,160,0.03); }
+  .card.ligado::before { background: var(--accent); }
+  .card.has-obs::after { content: '💬'; position: absolute; top: 12px; right: 44px; font-size: 11px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-company { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; flex: 1; padding-right: 10px; }
+  .card-company .fantasia { display: block; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .card-porte { font-size: 9px; font-weight: 600; padding: 3px 7px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px; text-transform: uppercase; flex-shrink: 0; }
+  .porte-MICRO { background: rgba(107,116,148,0.15); color: #9ba4c0; border: 1px solid rgba(107,116,148,0.2); }
+  .porte-EPP { background: rgba(79,143,255,0.12); color: var(--epp); border: 1px solid rgba(79,143,255,0.2); }
+  .porte-MEDIO { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+  .card-info { display: flex; flex-direction: column; gap: 6px; }
+  .info-row { display: flex; align-items: flex-start; gap: 8px; }
+  .info-icon { color: var(--muted); font-size: 12px; flex-shrink: 0; margin-top: 1px; width: 14px; text-align: center; }
+  .info-text { font-size: 12px; color: var(--text); line-height: 1.4; }
+  .info-text.phone { font-family: 'DM Mono', monospace; color: var(--accent); font-size: 13px; font-weight: 500; }
+  .info-text.email { color: var(--accent2); }
+  .info-text.muted { color: var(--muted); font-size: 11px; }
+  .info-text.cnpj { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .card-obs-preview { margin-top: 8px; font-size: 11px; color: var(--warn); font-style: italic; background: rgba(255,204,68,0.06); border-left: 2px solid rgba(255,204,68,0.3); padding: 4px 8px; border-radius: 0 4px 4px 0; }
+  .card-fat { display: inline-flex; font-size: 10px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; margin-top: 8px; font-family: 'DM Mono', monospace; }
+  .card-footer { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .socio-tag { font-size: 11px; color: var(--muted); }
+  .socio-tag span { color: var(--warn); font-weight: 500; }
+  .liga-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; color: var(--muted); font-size: 11px; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .liga-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.06); }
+  .liga-btn.done { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.08); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 90%; max-width: 560px; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+  .modal-close:hover { color: var(--text); background: var(--border); }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; padding-right: 40px; }
+  .modal-fantasia { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .modal-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+  .modal-field-value { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .modal-field-value.highlight { color: var(--accent); font-family: 'DM Mono', monospace; font-weight: 500; }
+  .modal-field-value.email { color: var(--accent2); }
+  .modal-field-value.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .modal-full { grid-column: 1 / -1; }
+
+  /* OBS FIELD */
+  .obs-section { margin-bottom: 20px; }
+  .obs-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .obs-textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+    resize: vertical; min-height: 80px; transition: border-color 0.2s; line-height: 1.5;
+  }
+  .obs-textarea::placeholder { color: var(--muted); }
+  .obs-textarea:focus { border-color: var(--accent); }
+  .obs-save-btn {
+    margin-top: 8px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.25);
+    border-radius: 6px; padding: 7px 16px; color: var(--accent); font-size: 12px;
+    font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s;
+  }
+  .obs-save-btn:hover { background: rgba(0,229,160,0.18); }
+  .obs-saved { font-size: 11px; color: var(--accent); margin-left: 10px; opacity: 0; transition: opacity 0.3s; }
+  .obs-saved.show { opacity: 1; }
+
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; transition: all 0.15s; text-decoration: none; text-align: center; border: none; }
+  .modal-btn-primary { background: var(--accent); color: #000; }
+  .modal-btn-primary:hover { opacity: 0.9; }
+  .modal-btn-primary.done { background: var(--border); color: var(--muted); }
+  .modal-btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .modal-btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+  .modal-btn-whats { background: #25d366; color: #fff; }
+  .modal-btn-whats:hover { opacity: 0.9; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; color: var(--text); z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.ok { border-color: rgba(0,229,160,0.3); }
+  .toast.err { border-color: rgba(255,107,53,0.3); }
+
+  /* CONFIG MODAL */
+  .config-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .config-overlay.open { display: flex; }
+  .config-modal { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 90%; max-width: 520px; }
+  .config-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .config-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .config-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
+  .config-input:focus { border-color: var(--accent); }
+  .config-btn { width: 100%; padding: 11px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+  .config-btn:hover { opacity: 0.9; }
+  .config-steps { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 18px; }
+  .config-step { font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .config-step strong { color: var(--text); }
+  .config-step a { color: var(--accent2); text-decoration: none; }
+  .config-step a:hover { text-decoration: underline; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 14px; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">Leads <span>Pro House</span></div>
+    <div class="logo-version">V1.1</div>
+    <div class="sync-status" onclick="openConfig()" title="Configurar sincronização">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Configurar sync</span>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-num" id="stat-total">104</div>
+      <div class="hstat-label">Total de Leads</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num" id="stat-ligados" style="color:var(--accent)">0</div>
+      <div class="hstat-label">Contatados</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num" id="stat-restantes" style="color:var(--warn)">104</div>
+      <div class="hstat-label">Restantes</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">🔍 Buscar</div>
+      <input type="text" class="search-input" id="search" placeholder="Empresa, sócio, cidade...">
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">📊 Porte</div>
+      <button class="filter-btn active" data-porte="all" onclick="filterPorte('all',this)">
+        <span>Todos</span><span class="count" id="cnt-all">104</span>
+      </button>
+      <button class="filter-btn" data-porte="MEDIO/GRANDE PORTE" onclick="filterPorte('MEDIO/GRANDE PORTE',this)">
+        <span><span class="porte-dot porte-medio"></span>Médio/Grande</span><span class="count" id="cnt-medio">0</span>
+      </button>
+      <button class="filter-btn" data-porte="EMPRESA DE PEQUENO PORTE" onclick="filterPorte('EMPRESA DE PEQUENO PORTE',this)">
+        <span><span class="porte-dot porte-epp"></span>Pequeno Porte</span><span class="count" id="cnt-epp">0</span>
+      </button>
+      <button class="filter-btn" data-porte="MICRO EMPRESA" onclick="filterPorte('MICRO EMPRESA',this)">
+        <span><span class="porte-dot porte-micro"></span>Micro Empresa</span><span class="count" id="cnt-micro">0</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">📍 Cidade</div>
+      <div id="cidade-filters"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">☎️ Status</div>
+      <button class="filter-btn active" data-ligado="all" onclick="filterLigado('all',this)">
+        <span>Todos</span><span class="count" id="cnt-todos-lig">104</span>
+      </button>
+      <button class="filter-btn" data-ligado="false" onclick="filterLigado('false',this)">
+        <span>🔴 Não contatados</span><span class="count" id="cnt-nao-lig">104</span>
+      </button>
+      <button class="filter-btn" data-ligado="true" onclick="filterLigado('true',this)">
+        <span>🟢 Contatados</span><span class="count" id="cnt-lig">0</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">📈 Progresso</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label">
+        <span id="progress-pct">0%</span>
+        <span id="progress-frac">0 / 104</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="result-count"><span id="result-num">104</span> resultados</div>
+        <button class="sort-btn active" id="sort-nome" onclick="sortBy('nome',this)">A-Z</button>
+        <button class="sort-btn" id="sort-porte" onclick="sortBy('porte',this)">Porte ↑</button>
+        <button class="sort-btn" id="sort-cidade" onclick="sortBy('cidade',this)">Cidade</button>
+      </div>
+      <button class="clear-btn" id="clear-btn" onclick="clearFilters()">Limpar filtros ✕</button>
+    </div>
+    <div class="cards-grid" id="cards-container"></div>
+    <div class="empty" id="empty-state" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">Nenhum resultado encontrado</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LEAD -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-title" id="modal-empresa">—</div>
+    <div class="modal-fantasia" id="modal-fantasia">—</div>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <div class="modal-field-label">📞 Telefone Principal</div>
+        <div class="modal-field-value highlight" id="modal-tel1">—</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">📞 Telefone 2</div>
+        <div class="modal-field-value highlight" id="modal-tel2">—</div>
+      </div>
+      <div class="modal-field modal-full">
+        <div class="modal-field-label">✉️ E-mail</div>
+        <div class="modal-field-value email" id="modal-email">—</div>
+      </div>
+      <div class="modal-field modal-full">
+        <div class="modal-field-label">📍 Endereço</div>
+        <div class="modal-field-value" id="modal-endereco">—</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">👤 Sócio Principal</div>
+        <div class="modal-field-value" id="modal-socio">—</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">📋 CNPJ</div>
+        <div class="modal-field-value mono" id="modal-cnpj">—</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">🏢 Porte</div>
+        <div class="modal-field-value" id="modal-porte">—</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">👥 Funcionários</div>
+        <div class="modal-field-value" id="modal-func">—</div>
+      </div>
+      <div class="modal-field modal-full">
+        <div class="modal-field-label">💰 Faturamento Estimado</div>
+        <div class="modal-field-value mono" id="modal-fat">—</div>
+      </div>
+      <div class="modal-field modal-full">
+        <div class="modal-field-label">🏗️ CNAE</div>
+        <div class="modal-field-value" id="modal-cnae">—</div>
+      </div>
+    </div>
+
+    <!-- OBS -->
+    <div class="obs-section">
+      <div class="obs-label">
+        💬 Observações
+        <span class="obs-saved" id="obs-saved">✓ Salvo</span>
+      </div>
+      <textarea class="obs-textarea" id="obs-textarea" placeholder="Anote aqui: resultado da ligação, próximo passo, recado do sócio..."></textarea>
+      <button class="obs-save-btn" onclick="saveObs()">💾 Salvar observação</button>
+    </div>
+
+    <div class="modal-actions">
+      <a class="modal-btn modal-btn-whats" id="modal-whats" href="#" target="_blank">💬 WhatsApp</a>
+      <a class="modal-btn modal-btn-secondary" id="modal-email-btn" href="#">✉️ E-mail</a>
+      <button class="modal-btn modal-btn-primary" id="modal-liga-btn" onclick="toggleLigadoModal()">Marcar Contatado</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="config-overlay" id="config-overlay" onclick="closeConfigModal(event)">
+  <div class="config-modal" onclick="event.stopPropagation()">
+    <div class="config-title">⚙️ Configurar Sincronização</div>
+    <div class="config-sub">Cole a URL do seu Google Apps Script abaixo para sincronizar status e observações entre todos os usuários em tempo real.</div>
+
+    <div class="config-steps">
+      <div class="config-step">
+        <strong>Como configurar (5 min):</strong><br>
+        1. Abra o arquivo <strong>apps_script.js</strong> que acompanha este dashboard<br>
+        2. Acesse <a href="https://script.google.com" target="_blank">script.google.com</a> → Novo projeto<br>
+        3. Cole o código e salve (Ctrl+S)<br>
+        4. Clique em <strong>Implantar → Nova implantação</strong><br>
+        5. Tipo: <strong>App da Web</strong> · Executar como: <strong>Eu</strong> · Acesso: <strong>Qualquer pessoa</strong><br>
+        6. Copie a URL gerada e cole abaixo
+      </div>
+    </div>
+
+    <input type="text" class="config-input" id="script-url-input" placeholder="https://script.google.com/macros/s/XXXXXX/exec">
+    <button class="config-btn" onclick="saveScriptUrl()">✓ Salvar e conectar</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// BLOB RELAUNCH — corrige CORS de file:// relançando como blob://
+// ============================================================
+(function() {
+  if (location.protocol === 'file:') {
+    var html = document.documentElement.outerHTML;
+    var blob = new Blob([html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    location.replace(url);
+    return;
+  }
+})();
+
+// ============================================================
+// DADOS
+// ============================================================
+const DATA = [{"empresa":"PROJECON - PROJETOS E CONSTRUCOES LTDA","fantasia":"PROJECON","cnpj":"05.461.819/0001-70","tel1":"8532722316","tel2":"8532722316","email":"projecon@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"SAO JOAO DO TAUAPE","cep":"60.120-100","endereco":"RUA FREI VIDAL 1610, SAO JOAO DO TAUAPE, FORTALEZA/CE - CEP 60.120-100","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"GALDINO GONDIM LINS NETO"},{"empresa":"CONSTRUTORA MACHADO DE OLIVEIRA LTDA","fantasia":"","cnpj":"06.066.096/0001-77","tel1":"85999985511","tel2":"","email":"cmo1496@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"BENFICA","cep":"60.025-002","endereco":"RUA SENADOR POMPEU 2272 ALTOS, BENFICA, FORTALEZA/CE - CEP 60.025-002","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FRANCISCO CARLOS MACHADO DE OLIVEIRA"},{"empresa":"VICTOR CONSTRUTORA E IMOBILIARIA LIMITADA","fantasia":"CONSTRUTORA VICTOR","cnpj":"06.926.133/0001-70","tel1":"8532610085","tel2":"85988788611","email":"covictor@terra.com.br","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"MEIRELES","cep":"60.115-280","endereco":"RUA DOUTOR JOSE LOURENCO 400, MEIRELES, FORTALEZA/CE - CEP 60.115-280","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"SANDOVAL VITOR DE ALENCAR"},{"empresa":"CORRETA SERVICOS E CONSTRUTORA LTDA","fantasia":"CORRETA CONSTRUCOES","cnpj":"08.865.094/0001-73","tel1":"8532391434","tel2":"","email":"","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"BARROSO","cep":"60.862-650","endereco":"RUA JOAO FERREIRA 1209 JARDIM VIOLETA, BARROSO, FORTALEZA/CE - CEP 60.862-650","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANA NETA MARTINS FEITOSA"},{"empresa":"A K S SA","fantasia":"XK CONSTRUTORA SERVICOS E LOCACAO","cnpj":"09.253.270/0001-89","tel1":"85997267445","tel2":"8836833735","email":"xkconstrutora1@gmail.com","porte":"MICRO EMPRESA","cidade":"PIRES FERREIRA","uf":"CE","bairro":"CENTRO","cep":"62.255-000","endereco":"RUA 22 DE MAIO SN, CENTRO, PIRES FERREIRA/CE - CEP 62.255-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":""},{"empresa":"CONSTRUTORA MENDONCA LTDA.","fantasia":"RESIDENCIAL DOM PEDRO","cnpj":"09.293.001/0003-08","tel1":"85999827560","tel2":"","email":"construtoramendonca@gmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"JABUTI","cep":"61.880-000","endereco":"AVENIDA I SN LOT PARQUE DOM PEDRO, JABUTI, ITAITINGA/CE - CEP 61.880-000","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"CARLOS HUMBERTO DE MENDONCA GOMES"},{"empresa":"DIAS & FROTA CONSTRUTORA E IMOBILIARIA LTDA","fantasia":"D & F SOLUCOES IMOBILIARIOS","cnpj":"09.376.014/0001-89","tel1":"8530447876","tel2":"","email":"diasefrotaci@outlook.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"MONDUBIM","cep":"60.761-520","endereco":"RUA DOUTOR RAIMUNDO MAIA 75 A, MONDUBIM, FORTALEZA/CE - CEP 60.761-520","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"ERICA THAIS DIAS FROTA CAVALCANTE"},{"empresa":"BEM PROJETOS E CONSTRUCOES LTDA","fantasia":"BEM PROJETOS E CONSTRUCOES","cnpj":"09.431.177/0001-17","tel1":"85988682069","tel2":"","email":"egirao4@gmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.150-162","endereco":"AVENIDA SANTOS DUMONT 2626 SALA: 601 , ALDEOTA, FORTALEZA/CE - CEP 60.150-162","cnae":"Serviços de engenharia","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"EUGENIO MONT ALVERNE GIRAO"},{"empresa":"CONSTRUTORA 3G LTDA","fantasia":"CONSTRUTORA 3G","cnpj":"09.540.810/0001-05","tel1":"8532616513","tel2":"","email":"","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"JABUTI","cep":"61.880-000","endereco":"AVENIDA DEPUTADO PAULINO ROCHA 1043 LOJA  2 TERREO, JABUTI, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"GERMANO FREIRE BEZERRA"},{"empresa":"CHESS CONSTRUCOES LTDA","fantasia":"CHESS CONSTRUTORA","cnpj":"10.279.390/0001-34","tel1":"8532785565","tel2":"85988805565","email":"chessconstrutora@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"SAPIRANGA / COITE","cep":"60.833-232","endereco":"RUA EDUARDO NOVAES 83, SAPIRANGA / COITE, FORTALEZA/CE - CEP 60.833-232","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"HILDELBERTO MONTEIRO GOMES"},{"empresa":"CHESS CONSTRUCOES LTDA","fantasia":"MONTE SINAL RESIDENCE","cnpj":"10.279.390/0002-15","tel1":"85987661324","tel2":"","email":"","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"PEDRAS","cep":"61.880-000","endereco":"RUA FRANNCISCO PAIXAO SN, PEDRAS, ITAITINGA/CE - CEP 61.880-000","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"HILDELBERTO MONTEIRO GOMES"},{"empresa":"AGIL-CONSTRUCOES E SERVICOS LTDA","fantasia":"AGIL","cnpj":"10.705.675/0001-90","tel1":"8532140292","tel2":"","email":"alex@asaassessoria.net","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"GERERAU","cep":"61.880-000","endereco":"RUA LUCIO LEAL NOGUEIRA 80, GERERAU, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JOSE ALDENIR ALMEIDA GOMES"},{"empresa":"CONSTRUTORA RAMOS LTDA","fantasia":"","cnpj":"12.452.041/0001-06","tel1":"","tel2":"","email":"","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"SAO JOAO DO TAUAPE","cep":"60.120-420","endereco":"AVENIDA GOV RAUL BARBOSA 4262 SALA 02, SAO JOAO DO TAUAPE, FORTALEZA/CE - CEP 60.120-420","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"MARIA CRISTINA LEITE RAMOS"},{"empresa":"NASCENTE CONSTRUCOES LTDA","fantasia":"NASCENTE CONSTRUCOES","cnpj":"15.372.706/0001-51","tel1":"85999416888","tel2":"8533360026","email":"nascenteltda@yahoo.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"HORIZONTE","uf":"CE","bairro":"LAGOINHA","cep":"62.887-010","endereco":"RUA RAIMUNDO LOURENCO DA COSTA 307, LAGOINHA, HORIZONTE/CE - CEP 62.887-010","cnae":"Obras de urbanização - ruas praças e calçadas","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"RAMON RAMIRES FARIAS NORONHA"},{"empresa":"HAUS CONSTRUCOES E EMPREENDIMENTOS IMOBILIARIOS LTDA","fantasia":"HAUS CONSTRUCOES","cnpj":"17.270.816/0001-38","tel1":"85997000615","tel2":"","email":"felipe_freire_2007@hotmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.120-002","endereco":"AVENIDA BARAO DE STUDART 2360 SALA 1403, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.120-002","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"PAULO FELIPE MACEDO FREIRE"},{"empresa":"ONAPI CONSTRUCOES E EMPREENDIMENTOS IMOBILIARIOS LTDA","fantasia":"ONAPI CONSTRUCOES","cnpj":"17.284.891/0001-58","tel1":"8532611113","tel2":"","email":"onapi.empreendimentos@gmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"PARQUE GENEZARE","cep":"61.880-000","endereco":"RUA MANOEL DE SOUSA 215 SALA  05, PARQUE GENEZARE, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"OTHO LEAL NOGUEIRA FILHO"},{"empresa":"CONSTRUTORA TELSA LTDA","fantasia":"EMPREENDIMENTO BARROCAO I","cnpj":"17.596.515/0003-60","tel1":"85999097448","tel2":"","email":"telsonandrade@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"BARROCAO","cep":"61.887-480","endereco":"RUA PROJETADA 01 . CASA  604-610-616-622-628 CASA  634-640-646, BARROCAO, ITAITINGA/CE - CEP 61.887-480","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"TELSON SOARES ANDRADE"},{"empresa":"SAGA CONSTRUTORA E INCORPORADORA LTDA","fantasia":"","cnpj":"18.281.298/0001-10","tel1":"85996051478","tel2":"","email":"","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"DIONISIO TORRES","cep":"60.125-151","endereco":"RUA OSVALDO CRUZ 2200 SALA  208, DIONISIO TORRES, FORTALEZA/CE - CEP 60.125-151","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"SAMUEL SAMPAIO DE ALENCAR SARAIVA"},{"empresa":"CONSTRUTORA LAJES LTDA","fantasia":"CONSTRUTORA LAJES","cnpj":"19.393.799/0001-51","tel1":"8532659874","tel2":"","email":"","porte":"EMPRESA DE PEQUENO PORTE","cidade":"CAUCAIA","uf":"CE","bairro":"PARQUE SOLEDADE","cep":"61.603-005","endereco":"RUA CORONEL CORREIA 700 : B , PARQUE SOLEDADE, CAUCAIA/CE - CEP 61.603-005","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"JESSICA CORREIA QUEIROZ"},{"empresa":"RR CONSTRUCOES LTDA","fantasia":"RR CONSTRUCOES","cnpj":"19.979.286/0001-27","tel1":"85987109999","tel2":"","email":"renatofilho@hotmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.120-001","endereco":"AVENIDA BARAO DE STUDART 1165 205, ALDEOTA, FORTALEZA/CE - CEP 60.120-001","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"RENATO JORGE FERREIRA RIOS FILHO"},{"empresa":"LIMEIRA LIMA IMOVEIS E CONSTRUCOES LTDA","fantasia":"","cnpj":"21.331.464/0001-50","tel1":"85988382881","tel2":"85996603456","email":"","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"SAPIRANGA","cep":"60.833-414","endereco":"RUA JOSE MOACIR BEZERRA 90, SAPIRANGA, FORTALEZA/CE - CEP 60.833-414","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"ANDRE MACEDO LIMEIRA LIMA"},{"empresa":"CONSTRUTORA SB LTDA","fantasia":"CONSTRUTORA SB","cnpj":"22.039.262/0001-00","tel1":"85988430207","tel2":"85987220202","email":"kareninasindeaux@hotmail.com","porte":"MICRO EMPRESA","cidade":"INDEPENDENCIA","uf":"CE","bairro":"CENTRO","cep":"63.640-000","endereco":"RUA PRESIDENTE VARGAS 270, CENTRO, INDEPENDENCIA/CE - CEP 63.640-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"MARGARIDA MARIA BARREIRA SINDEAUX"},{"empresa":"CONSTRUTORA CX LTDA","fantasia":"","cnpj":"23.759.930/0001-29","tel1":"8532245943","tel2":"","email":"atendimentoconstrutora@outlook.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"DIONISIO TORRES","cep":"60.125-151","endereco":"RUA OSVALDO CRUZ 2200 SL205, DIONISIO TORRES, FORTALEZA/CE - CEP 60.125-151","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"FRANCISCO JOSE ROCHA"},{"empresa":"SPE - DL CONSTRUCOES LTDA","fantasia":"","cnpj":"24.063.318/0001-80","tel1":"85987452770","tel2":"","email":"supergodo@yahoo.com.br","porte":"MEDIO/GRANDE PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"GERERAU","cep":"61.880-000","endereco":"RUA CEL ANTONIO FERREIRA 696, GERERAU, ITAITINGA/CE - CEP 61.880-000","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"DANUSIO DE PAIVA FERREIRA"},{"empresa":"G. F. CONSTRUTORA E INCORPORADORA LTDA","fantasia":"G. F. CONSTRUCOES","cnpj":"24.709.633/0001-31","tel1":"85988406129","tel2":"","email":"","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"BARROCAO","cep":"61.880-000","endereco":"RUA CANDIDO MEIRELES 267, BARROCAO, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"GIOVANNI DUARTE FIGUEIREDO"},{"empresa":"CONSTRUTORA FARIAS E PINHO LTDA","fantasia":"CONSTRUTORA JL.","cnpj":"24.952.395/0001-90","tel1":"8532912549","tel2":"","email":"","porte":"EMPRESA DE PEQUENO PORTE","cidade":"NOVO ORIENTE","uf":"CE","bairro":"CENTRO","cep":"63.740-000","endereco":"AVENIDA SAO FRANCISCO 800, CENTRO, NOVO ORIENTE/CE - CEP 63.740-000","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"IRANILDE RODRIGUES DE PINHO FARIAS"},{"empresa":"P. S. CONSTRUCOES E ENGENHARIA LTDA","fantasia":"","cnpj":"25.117.039/0001-14","tel1":"8530214179","tel2":"","email":"ps2025@gmail.com","porte":"MICRO EMPRESA","cidade":"MORADA NOVA","uf":"CE","bairro":"DOIS DE AGOSTO","cep":"62.946-024","endereco":"RUA JOSE GONCALVES 176, DOIS DE AGOSTO, MORADA NOVA/CE - CEP 62.946-024","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"SHIRLEY LIMA DA SILVA"},{"empresa":"FRANCA CONSTRUCOES E INCORPORACOES LTDA","fantasia":"FRANCA CONSTRUCOES","cnpj":"25.530.118/0001-52","tel1":"85991417010","tel2":"","email":"alexanderpfranca@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"COCO","cep":"60.192-200","endereco":"AVENIDA ENGENHEIRO SANTANA JUNIOR 3000 SALA 301, COCO, FORTALEZA/CE - CEP 60.192-200","cnae":"Compra e venda de imóveis próprios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ALEXANDER PALACIO FRANCA"},{"empresa":"CONCRETA CONSTRUCOES E INCORPORACOES LTDA","fantasia":"CONCRETA CONSTRUCOES E INCORPORACOES","cnpj":"26.068.400/0001-22","tel1":"85988780033","tel2":"","email":"roozevelt11@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"MARANGUAPE","uf":"CE","bairro":"NOVO MARANGUAPE II","cep":"61.944-660","endereco":"RUA EDUARDO MONTEIRO E SILVA 344 TERRENO 07, NOVO MARANGUAPE II, MARANGUAPE/CE - CEP 61.944-660","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ROOZEVELT CAMELO VASCONCELOS"},{"empresa":"PRIUS CONSTRUCOES LTDA","fantasia":"PRIUS CONSTRUTORA","cnpj":"26.420.245/0001-61","tel1":"85997915902","tel2":"","email":"priusconstrutora@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.110-535","endereco":"RUA JOAO CORDEIRO 3069, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.110-535","cnae":"Serviços de engenharia","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JUAN VICENTE TORRELLAS GUZMAN"},{"empresa":"PADRONIZA CONSTRUCOES LTDA","fantasia":"PADRONIZA CONSTRUCOES","cnpj":"28.068.530/0001-90","tel1":"85986682590","tel2":"85988085337","email":"referencialcontador@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"ANGORA","cep":"61.880-000","endereco":"RUA VALDEBERTO DE ALBUQUERQUE 604, ANGORA, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"FRANCISCO DE ASSIS ARAUJO ALVES"},{"empresa":"CABRAL & FERNANDES CONSTRUCOES LTDA","fantasia":"CABRAL & FERNANDES CONSTRUCOES","cnpj":"30.123.931/0001-48","tel1":"85999875336","tel2":"","email":"elizetexistos@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-825","endereco":"AVENIDA HERMINIO DE CASTRO 346 A, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-825","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ELIZETE CABRAL DA SILVA"},{"empresa":"BV LIRA SERVICOS CONSTRUCOES LTDA","fantasia":"ALPHA CONSTRUCOES","cnpj":"31.469.572/0001-48","tel1":"85999027880","tel2":"85999023621","email":"alpha.construcoes@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CIDADE DOS FUNCIONARIOS","cep":"60.822-630","endereco":"RUA TEOFREDO GOIANA 783 A, CIDADE DOS FUNCIONARIOS, FORTALEZA/CE - CEP 60.822-630","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"BEATRIZ VIEIRA LIRA"},{"empresa":"SAXUM CONSTRUCOES EDIFICACOES E LOCACOES LTDA","fantasia":"SAXUM CONSTRUCOES E SERVICOS","cnpj":"32.147.488/0001-70","tel1":"8532761185","tel2":"","email":"rncontabil@hotmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"PAUPINA","cep":"60.872-635","endereco":"RUA LUCIOLA 316 A, PAUPINA, FORTALEZA/CE - CEP 60.872-635","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"NERISVAN DE SOUSA CRUZ"},{"empresa":"JC CONSTRUCOES LTDA","fantasia":"JC CONSTRUCOES","cnpj":"35.055.522/0001-75","tel1":"85998024116","tel2":"","email":"daisystudart77@gmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"ANCURI","cep":"61.880-000","endereco":"RUA R 536 SALA  C LOT.NOVO ANCURI, ANCURI, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JOAO PAULO FERREIRA STUDART GOMES"},{"empresa":"CONSTRUTORA AC LTDA","fantasia":"CONSTRUTORA AC","cnpj":"35.411.699/0001-67","tel1":"88994654234","tel2":"","email":"construtoraac2019@gmail.com","porte":"MICRO EMPRESA","cidade":"MERUOCA","uf":"CE","bairro":"CENTRO","cep":"62.130-000","endereco":"RUA JOSUE BERNARDO DE LIRA 481, CENTRO, MERUOCA/CE - CEP 62.130-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ALBEGERIO COSTA DE SOUSA"},{"empresa":"WALTER ROMERO CASTELO BRANCO CONSTRUTORA LTDA","fantasia":"CONDOMINIO RESIDENCIAL CASTELO XIV","cnpj":"35.761.234/0008-02","tel1":"85996144443","tel2":"","email":"casteloconstrutora@live.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"ANCURI","cep":"61.885-838","endereco":"RUA OTAVIO DE MATOS 642, ANCURI, ITAITINGA/CE - CEP 61.885-838","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"WALTER ROMERO CASTELO BRANCO"},{"empresa":"MORATTA CONSTRUTORA E INCORPORADORA LTDA","fantasia":"MORATTA CONSTRUTORA E INCORPORADORA","cnpj":"36.716.148/0001-74","tel1":"85998136676","tel2":"","email":"morattaconstrutora@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-800","endereco":"RUA LIDIA BRIGIDO 66, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-800","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANDERSON DE OLIVEIRA DUARTE CAVALCANTE"},{"empresa":"J F SILVEIRA CONSTRUCOES LTDA","fantasia":"","cnpj":"37.840.172/0001-83","tel1":"85981228983","tel2":"","email":"franciscosilveirac@gmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"BARROCAO","cep":"61.880-000","endereco":"RUA JORGE FIGUEIREDO 1881, BARROCAO, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FRANCISCO DAS CHAGAS DA SILVEIRA SOBRINHO"},{"empresa":"MODERNA CONSTRUTORA E INCORPORADORA LTDA","fantasia":"MODERNA CONSTRUTORA E INCORPORADORA","cnpj":"40.036.953/0001-24","tel1":"85988752500","tel2":"","email":"paulohpradog1@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JARDIM CEARENSE","cep":"60.712-023","endereco":"AVENIDA GODOFREDO MACIEL 2947 LOJA 44, JARDIM CEARENSE, FORTALEZA/CE - CEP 60.712-023","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"PAULO HENRIQUE PRADO GONCALVES"},{"empresa":"SANTA LUZIA CONSTRUCOES E INCORPORACOES LTDA","fantasia":"CONSTRUTORA SANTA LUZIA","cnpj":"40.100.300/0001-67","tel1":"85981228983","tel2":"","email":"franciscosilveirac@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-825","endereco":"AVENIDA HERMINIO DE CASTRO 346 A, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-825","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FRANCISCO DAS CHAGAS DA SILVEIRA SOBRINHO"},{"empresa":"CONSTRUTORA COLARES LTDA","fantasia":"CONSTRUTORA COLARES","cnpj":"41.175.897/0001-71","tel1":"8534947478","tel2":"85985051259","email":"contabiliza.ass@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CENTRO","cep":"60.020-030","endereco":"RUA GENERAL SAMPAIO 628 1 ANDAR SALA 01, CENTRO, FORTALEZA/CE - CEP 60.020-030","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JULIETE DE LACERDA LIMA COLARES"},{"empresa":"THE ONE CONSTRUTORA E IMOBILIARIA LTDA","fantasia":"THE ONE","cnpj":"41.179.824/0001-58","tel1":"85999004444","tel2":"","email":"advfernandorocha@hotmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"DIONISIO TORRES","cep":"60.125-151","endereco":"RUA OSVALDO CRUZ 2200 SL206, DIONISIO TORRES, FORTALEZA/CE - CEP 60.125-151","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"FERNANDO ANTONIO ROCHA JUNIOR"},{"empresa":"LIMA BARBOSA CONSTRUCOES LTDA","fantasia":"LIMA CONSTRUCOES","cnpj":"41.246.617/0001-79","tel1":"85981097189","tel2":"","email":"vpcontabilidade@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CIDADE DOS FUNCIONARIOS","cep":"60.822-130","endereco":"AVENIDA OLIVEIRA PAIVA 1600 LOJA 11, CIDADE DOS FUNCIONARIOS, FORTALEZA/CE - CEP 60.822-130","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"MARIA DAS GRACAS BARBOSA DE LIMA"},{"empresa":"CONSTRUTORA RESIDENCE LTDA","fantasia":"","cnpj":"41.551.565/0001-44","tel1":"8532290081","tel2":"","email":"c_residence@hotmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"PAUPINA","cep":"60.872-655","endereco":"RUA CLEMENTE PEREIRA 191, PAUPINA, FORTALEZA/CE - CEP 60.872-655","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"FRANCISCO DE ASSIS TEIXEIRA DE SOUZA"},{"empresa":"SUCESSO CONSTRUCOES LTDA","fantasia":"","cnpj":"42.024.749/0001-19","tel1":"88997776743","tel2":"","email":"josepereirasampaio@gmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"PARQUE DOM PEDRO","cep":"61.888-174","endereco":"RUA PROJETADA 01 (LOTEAMENTO JARDIM ITAITINGA) 383, PARQUE DOM PEDRO, ITAITINGA/CE - CEP 61.888-174","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JOSE PEREIRA SAMPAIO"},{"empresa":"SANTIAGO INCORPORADORA E CONSTRUTORA LTDA","fantasia":"SANTIAGO INCORPORACOES","cnpj":"42.320.300/0001-06","tel1":"85988924049","tel2":"","email":"elizethsobreira@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"JARDIM DAS OLIVEIRAS","cep":"60.821-460","endereco":"RUA ATAULFO ALVES 406, JARDIM DAS OLIVEIRAS, FORTALEZA/CE - CEP 60.821-460","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"ELIZETH REGINA SILVA SOBREIRA SANTIAGO"},{"empresa":"CONSTRUTORA E IMOBILIARIA RODRIGUES LTDA","fantasia":"CONSTRUTORA E IMOBILIARIA RODRIGUES","cnpj":"44.922.978/0001-86","tel1":"85988147178","tel2":"","email":"contabil@singularcontabilidade.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"JABUTI","cep":"61.887-110","endereco":"AVENIDA DEPUTADO PAULINO ROCHA 190 ALTOS 3, JABUTI, ITAITINGA/CE - CEP 61.887-110","cnae":"Compra e venda de imóveis próprios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"RODRIGO BARROS TORRES"},{"empresa":"GCA CONSTRUCOES E SERVICOS ADMINISTRATIVOS LTDA","fantasia":"","cnpj":"46.552.995/0001-02","tel1":"85996795487","tel2":"","email":"gabri-arcanjo@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-800","endereco":"RUA LIDIA BRIGIDO 66, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-800","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"GABRIEL CARIOCA ARCANJO"},{"empresa":"C C L - CONSTRUTORA E INCORPORADORA COSTA LIMA LTDA","fantasia":"C C L - INCORPORADORA","cnpj":"47.696.621/0001-15","tel1":"85999895473","tel2":"","email":"pauloahlima@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.160-196","endereco":"AVENIDA DOM LUIS 880 SALA 506, ALDEOTA, FORTALEZA/CE - CEP 60.160-196","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"MARIA BETANIA ALVES COSTA"},{"empresa":"TS CONSTRUCOES LTDA","fantasia":"TS CONSTRUCOES","cnpj":"48.066.987/0001-73","tel1":"85999704561","tel2":"","email":"empresatsconstrucoes@gmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"BARROCAO","cep":"61.880-000","endereco":"RUA SDO W 33, BARROCAO, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FRANCISCA ARACILIANE CARNEIRO SANTANA DA SILVA"},{"empresa":"R T F CONSTRUCOES E INCORPORACOES LTDA","fantasia":"RTF CONSTRUCOES","cnpj":"48.206.453/0001-03","tel1":"85988614504","tel2":"","email":"tamirislonely@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"CENTRO","cep":"61.880-000","endereco":"RUA RAIMUNDO ALVES CAVALCANTE 1163 SALA  02, CENTRO, ITAITINGA/CE - CEP 61.880-000","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"FRANCISCO DEMETRIUS DE SOUSA E SA"},{"empresa":"MW CONSTRUCOES LTDA","fantasia":"","cnpj":"48.214.429/0001-08","tel1":"85999407232","tel2":"","email":"josewilknogueira@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CENTRO","cep":"60.060-120","endereco":"RUA 25 DE MARCO 84 304, CENTRO, FORTALEZA/CE - CEP 60.060-120","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JOSE WILK NOGUEIRA ALVES"},{"empresa":"KEFA CONSTRUTORA E INCORPORADORA LTDA","fantasia":"CONSTRUTORA KEFA","cnpj":"49.308.172/0001-16","tel1":"85981340101","tel2":"85991888999","email":"construtorakefa@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-740","endereco":"RUA PROFESSOR CARLOS LOBO 260 SL-03, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-740","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ANDRE GORKI LOPES NOGUEIRA"},{"empresa":"MAVISA CONSTRUTORA LTDA","fantasia":"MAVISA","cnpj":"49.646.020/0001-23","tel1":"85999298118","tel2":"","email":"mavisareformas@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.135-270","endereco":"RUA VICENTE LINHARES 500 710, ALDEOTA, FORTALEZA/CE - CEP 60.135-270","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"MARINA DE CASTRO SALES SILVEIRA"},{"empresa":"CONSTRUTORA E INCORPORADORA SAMPAIO LESSA LTDA","fantasia":"","cnpj":"51.044.127/0001-43","tel1":"85988537639","tel2":"","email":"construtorasampaiolessa@gmail.com","porte":"MICRO EMPRESA","cidade":"PACATUBA","uf":"CE","bairro":"PAVUNA","cep":"61.809-070","endereco":"RUA SENADOR POMPEU 1322, PAVUNA, PACATUBA/CE - CEP 61.809-070","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"MARIA APARECIDA SAMPAIO LESSA PINTO"},{"empresa":"PRIME CONSTRUCOES LTDA","fantasia":"","cnpj":"51.482.437/0001-40","tel1":"8530210587","tel2":"","email":"slcontabil2@hotmail.com","porte":"MICRO EMPRESA","cidade":"EUSEBIO","uf":"CE","bairro":"CENTRO","cep":"61.760-051","endereco":"AVENIDA EUSEBIO DE QUEIROZ 4359 SALA  2-B, CENTRO, EUSEBIO/CE - CEP 61.760-051","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FRANCISCO RAFAEL CALIXTO DA SILVA"},{"empresa":"LVGR CONSTRUCOES LTDA","fantasia":"LVGR CONSTRUCOES","cnpj":"51.597.740/0001-98","tel1":"85999723206","tel2":"","email":"engfernandoerich@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"MESSEJANA","cep":"60.840-440","endereco":"RUA FRANCISCO FERREIRA BAIMA 485 A, MESSEJANA, FORTALEZA/CE - CEP 60.840-440","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FERNANDO ERICH GUILHERME RODRIGUES"},{"empresa":"S.R. PIOTO CONSTRUCOES LTDA","fantasia":"SRP CONSTRUTORA","cnpj":"52.145.491/0001-62","tel1":"85999816383","tel2":"","email":"sricardopioto@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"FATIMA","cep":"60.411-220","endereco":"RUA DOUTOR RATISBONA 96, FATIMA, FORTALEZA/CE - CEP 60.411-220","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"SERGIO RICARDO PIOTO"},{"empresa":"HENRY MONTEIRO CONSTRUTORA E INCORPORACAO LTDA.","fantasia":"HENRY CONSTRUCOES","cnpj":"52.183.553/0001-20","tel1":"85999988857","tel2":"","email":"filalencarpsi@gmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.160-196","endereco":"AVENIDA DOM LUIS 300 LJ328, ALDEOTA, FORTALEZA/CE - CEP 60.160-196","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"FELIPE ALENCAR SILVA"},{"empresa":"CONSTRUTORA ESTEVES COLARES LTDA","fantasia":"ITAITINGA VILLE","cnpj":"52.413.373/0001-98","tel1":"8538784160","tel2":"","email":"phelipe_esteves@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"EDSON QUEIROZ","cep":"60.834-455","endereco":"RUA CELESTE ARRUDA 179, EDSON QUEIROZ, FORTALEZA/CE - CEP 60.834-455","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"PHELIPE ESTEVES OLIVEIRA BEZERRA"},{"empresa":"DOMUSS CONSTRUCOES E INCORPORACAO LTDA","fantasia":"DOMUSS CONSTRUCOES","cnpj":"52.793.763/0001-30","tel1":"85982001121","tel2":"","email":"cimentoprime01@hotmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"ANCURI","cep":"61.885-385","endereco":"AVENIDA JORGE FIGUEIREDO 3487, ANCURI, ITAITINGA/CE - CEP 61.885-385","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ALLYSON NASCIMENTO PEREIRA MOREIRA"},{"empresa":"SANTA CLARA CONSTRUCOES SPE LTDA","fantasia":"","cnpj":"52.948.329/0001-82","tel1":"8530237579","tel2":"","email":"andreasfor@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.115-125","endereco":"RUA ILDEFONSO ALBANO 2095 SALA 16, ALDEOTA, FORTALEZA/CE - CEP 60.115-125","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"JOAO VITOR CHAVES MARQUES"},{"empresa":"SANTA CLARA CONSTRUCOES SPE LTDA","fantasia":"CONDOMINIO RESIDENCIAL PARAISO 3","cnpj":"52.948.329/0003-44","tel1":"85999350430","tel2":"","email":"fiscal@cdbassessoria.com.br","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"BARROCAO","cep":"61.887-585","endereco":"RUA FATIMA M DANTAS DE OLIVEIRA 190, BARROCAO, ITAITINGA/CE - CEP 61.887-585","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"JOAO VITOR CHAVES MARQUES"},{"empresa":"PUMA CONSTRUCOES LTDA","fantasia":"PUMA CONSTRUCOES","cnpj":"53.266.453/0001-20","tel1":"85999091750","tel2":"","email":"pumaconstrucoesltda@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.120-002","endereco":"AVENIDA BARAO DE STUDART 2360 SALA 1403, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.120-002","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"SIMONI ALVES SOUZA MACHADO"},{"empresa":"CSG CONSTRUCOES LTDA","fantasia":"CSG","cnpj":"53.518.642/0001-43","tel1":"8531228055","tel2":"","email":"cont@contcontabil.com.br","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.160-196","endereco":"AVENIDA DOM LUIS 906 501, ALDEOTA, FORTALEZA/CE - CEP 60.160-196","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"CLODOALDO DA SILVA GOUVEIA JUNIOR"},{"empresa":"ART CONSTRUTORA LTDA","fantasia":"ART CONSTRUTORA","cnpj":"53.602.859/0001-37","tel1":"85999999999","tel2":"","email":"contato@artconstrutora.com.br","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-825","endereco":"AVENIDA HERMINIO DE CASTRO 130 SALA 05, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-825","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANA ROBERTA PEREIRA"},{"empresa":"R3B CONSTRUTORA LTDA","fantasia":"R3B CONSTRUTORA","cnpj":"54.038.437/0001-43","tel1":"85987277770","tel2":"","email":"ricardobrasilary@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.150-162","endereco":"AVENIDA SANTOS DUMONT 3060 SALA ADMINISTRACAO, ALDEOTA, FORTALEZA/CE - CEP 60.150-162","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"RAFAEL ESTEVES ROMCY"},{"empresa":"CONSTRUTORA PENAFORTE HOLANDA LTDA","fantasia":"CONSTRUTORA PENAFORTE HOLANDA","cnpj":"54.254.449/0001-05","tel1":"85987039491","tel2":"","email":"bruno_conthabil@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"SAO JOAO DO TAUAPE","cep":"60.120-340","endereco":"RUA PROFESSOR CARVALHO 3352 703, SAO JOAO DO TAUAPE, FORTALEZA/CE - CEP 60.120-340","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"FELIPHE GOMES HOLANDA"},{"empresa":"AKIRE CONSTRUCOES E INCORPORACOES LTDA","fantasia":"AKIRE CONSTRUCOES E INCORPORACOES","cnpj":"54.330.269/0001-65","tel1":"85996937166","tel2":"","email":"erikakaianne@yahoo.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"EUSEBIO","uf":"CE","bairro":"AMADOR","cep":"61.769-070","endereco":"AVENIDA EUSEBIO DE QUEIROZ 2715, AMADOR, EUSEBIO/CE - CEP 61.769-070","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ERIKA KAIANNE SAMPAIO PAIVA"},{"empresa":"CR CONSTRUCOES E INCORPORACOES LTDA","fantasia":"CR CONSTRUCOES E INCORPORACOES LTDA","cnpj":"54.379.589/0001-00","tel1":"85998220162","tel2":"","email":"carlosrafael6787@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"EUSEBIO","uf":"CE","bairro":"AMADOR","cep":"61.769-070","endereco":"AVENIDA EUSEBIO DE QUEIROZ 2715, AMADOR, EUSEBIO/CE - CEP 61.769-070","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"CARLOS RAFAEL FERREIRA RIBEIRO"},{"empresa":"FTP CONSTRUCOES LTDA","fantasia":"","cnpj":"54.891.125/0001-88","tel1":"85999987389","tel2":"","email":"felipestudartpinto@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.170-002","endereco":"AVENIDA DESEMBARGADOR MOREIRA 1300 SALA 616 T- NORTE, ALDEOTA, FORTALEZA/CE - CEP 60.170-002","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"FELIPE STUDART GOMES PINTO"},{"empresa":"SANTA HELENA CONSTRUCOES LTDA","fantasia":"CONSTRUTORA SANTA HELENA","cnpj":"55.150.134/0001-80","tel1":"85999350430","tel2":"","email":"andreasfor@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.115-125","endereco":"RUA ILDEFONSO ALBANO 2095 SALA 16, ALDEOTA, FORTALEZA/CE - CEP 60.115-125","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ANDRE ASFOR MACHADO"},{"empresa":"PROJETO 4 CONSTRUCOES SPE LTDA","fantasia":"PROJETO 4","cnpj":"55.515.439/0001-49","tel1":"8532643771","tel2":"","email":"am.contabil@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"CENTRO","cep":"60.025-120","endereco":"TRAVESSA PARA 12 PAVIMENTO 301, CENTRO, FORTALEZA/CE - CEP 60.025-120","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"CINTHIA PEREIRA UCHOA MACHADO"},{"empresa":"CONSTRUTORA ATS SPE LTDA","fantasia":"CONSTRUTORA ATS","cnpj":"55.579.078/0001-02","tel1":"85991327283","tel2":"","email":"samuel_saraiva@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"ALDEOTA","cep":"60.115-191","endereco":"RUA MONSENHOR BRUNO 1153 SALA 1423, ALDEOTA, FORTALEZA/CE - CEP 60.115-191","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"SAMUEL SAMPAIO DE ALENCAR SARAIVA"},{"empresa":"RESIDENCIAL ABRAAO CONSTRUCOES E INCORPORACOES SPE LTDA","fantasia":"","cnpj":"55.629.928/0001-21","tel1":"85991837156","tel2":"","email":"ponteassessoriacontabil@gmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.110-535","endereco":"RUA JOAO CORDEIRO 3069, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.110-535","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"ANDERSON ARAGAO DE FARIAS"},{"empresa":"CONSTRUTORA VENTO LESTE LTDA","fantasia":"CONSTRUTORA VENTO LESTE LTDA","cnpj":"55.652.125/0001-98","tel1":"85999820012","tel2":"","email":"gustavosobreira@terra.com.br","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"MONTESE","cep":"60.420-720","endereco":"RUA ROMEU MARTINS 855 LJ2-2PV, MONTESE, FORTALEZA/CE - CEP 60.420-720","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"GUSTAVO ALBANO AMORIM SOBREIRA"},{"empresa":"P&D CONSTRUCOES LTDA.","fantasia":"","cnpj":"55.799.047/0001-59","tel1":"85988143377","tel2":"","email":"prpcavalcanti@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CIDADE DOS FUNCIONARIOS","cep":"60.822-130","endereco":"AVENIDA OLIVEIRA PAIVA 1194, CIDADE DOS FUNCIONARIOS, FORTALEZA/CE - CEP 60.822-130","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"MARILAC MARINHO CAVALCANTI"},{"empresa":"CONSTRUTORA ALCANTARA LTDA","fantasia":"","cnpj":"56.032.666/0001-86","tel1":"85996225740","tel2":"","email":"pereiradiego657@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"ANCURI","cep":"61.885-844","endereco":"RUA DA ALEGRIA 66, ANCURI, ITAITINGA/CE - CEP 61.885-844","cnae":"Compra e venda de imóveis próprios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"MATHEUS SOUSA DE ALCANTARA"},{"empresa":"BULL HOME CONSTRUCOES E INCORPORACOES LTDA","fantasia":"BULL HOME","cnpj":"56.923.852/0001-05","tel1":"85991835817","tel2":"","email":"nunesyann@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"PARQUE GENEZARE","cep":"61.881-368","endereco":"RUA JOAQUIM PEREIRA DA SILVEIRA 387, PARQUE GENEZARE, ITAITINGA/CE - CEP 61.881-368","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ROSANNA MENEZES BARBOSA NUNES"},{"empresa":"BULL HOME CONSTRUCOES E INCORPORACOES LTDA","fantasia":"MINOS","cnpj":"56.923.852/0002-96","tel1":"","tel2":"","email":"","porte":"EMPRESA DE PEQUENO PORTE","cidade":"ITAITINGA","uf":"CE","bairro":"PONTA DA SERRA","cep":"61.883-547","endereco":"RUA CARIUS 204 LOTE 10 E 11 QRA 03 LOTEAM. JARDIM DA SERRA., PONTA DA SERRA, ITAITINGA/CE - CEP 61.883-547","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ROSANNA MENEZES BARBOSA NUNES"},{"empresa":"LMC CONSTRUTORA E INCORPORADORA LTDA","fantasia":"","cnpj":"57.180.167/0001-07","tel1":"8531228055","tel2":"","email":"cont@contcontabil.com.br","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.110-535","endereco":"RUA JOAO CORDEIRO 3069, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.110-535","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"IVONE MARIA LIMA CORREIA"},{"empresa":"MRD CONSTRUCOES LTDA","fantasia":"CONSTRUTORA MRD","cnpj":"57.187.449/0001-28","tel1":"85997962860","tel2":"","email":"franciscomatheusriosaragao@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUELANDIA","cep":"60.450-305","endereco":"RUA CONSELHEIRO VIEIRA DA SILVA 403, PARQUELANDIA, FORTALEZA/CE - CEP 60.450-305","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"DAVID BANDEIRA DE MELO JUNIOR"},{"empresa":"CONSTRUTORA REOBOTE LTDA","fantasia":"","cnpj":"57.462.414/0001-50","tel1":"8534723912","tel2":"","email":"contabil@singularcontabilidade.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"PARQUE GENEZARE","cep":"61.881-353","endereco":"RUA GUIOMAR DE OLIVEIRA 10, PARQUE GENEZARE, ITAITINGA/CE - CEP 61.881-353","cnae":"Compra e venda de imóveis próprios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANTONIA DANIELA BATISTA DA SILVA"},{"empresa":"NGL EMPREENDIMENTOS E CONSTRUCOES LTDA","fantasia":"","cnpj":"57.979.371/0001-84","tel1":"85989930870","tel2":"","email":"lh.pontes50@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"FATIMA","cep":"60.415-100","endereco":"RUA VALDEMAR PINHO 93, FATIMA, FORTALEZA/CE - CEP 60.415-100","cnae":"Gestão e administração da propriedade imobiliária","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"GEORGE NEPOMUCENO DE FREITAS"},{"empresa":"DELTA CONSTRUTORA LTDA","fantasia":"","cnpj":"58.013.803/0001-60","tel1":"85998866080","tel2":"","email":"valfredoleaocandeira@hotmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.110-535","endereco":"RUA JOAO CORDEIRO 3069, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.110-535","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"VALFREDO LEAO CANDEIRA JUNIOR"},{"empresa":"DUO BRAGA CONSTRUCOES E EMPREENDIMENTOS IMOBILIARIOS LTDA","fantasia":"","cnpj":"58.190.426/0001-35","tel1":"85981781533","tel2":"","email":"duobraga@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"DIONISIO TORRES","cep":"60.135-225","endereco":"RUA WALTER BEZERRA DE SA 65, DIONISIO TORRES, FORTALEZA/CE - CEP 60.135-225","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"GEORGE LOPES BRAGA"},{"empresa":"HEROVI CONSTRUCOES E INCORPORACOES LTDA","fantasia":"HEROVI","cnpj":"58.616.086/0001-61","tel1":"85999276412","tel2":"","email":"rodrigomartinsdavid@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"PICI","cep":"60.440-593","endereco":"AVENIDA ENGENHEIRO HUMBERTO MONTE 2929 704 S, PICI, FORTALEZA/CE - CEP 60.440-593","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"RODRIGO MARTINS DAVID DE SOUSA"},{"empresa":"CB CONSTRUCOES LTDA","fantasia":"","cnpj":"59.214.679/0001-64","tel1":"8532363752","tel2":"","email":"son.oliveira@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.110-535","endereco":"RUA JOAO CORDEIRO 3069, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.110-535","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANDERSON ARAUJO OLIVEIRA"},{"empresa":"RESIDENCIAL FLAMBOYANT III CONSTRUCOES SPE LTDA","fantasia":"RESIDENCIAL FLAMBOYANT III","cnpj":"59.596.578/0001-03","tel1":"8532653000","tel2":"","email":"contabilidadeflamboyant3@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"CAMBEBA","cep":"60.822-270","endereco":"RUA DESEMBARGADOR JOSE GIL DE CARVALHO 162, CAMBEBA, FORTALEZA/CE - CEP 60.822-270","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"LUIS ARMANDO ANTERO LOBO"},{"empresa":"WS CONSTRUCOES LTDA","fantasia":"","cnpj":"60.160.510/0001-58","tel1":"85996923426","tel2":"","email":"weldon171707@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"MONDUBIM","cep":"60.762-210","endereco":"RUA LOURDES 35, MONDUBIM, FORTALEZA/CE - CEP 60.762-210","cnae":"Serviços especializados para construção","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JOSE WELDON DE SOUSA"},{"empresa":"IDS CONSTRUTORA E INCORPORADORA LTDA","fantasia":"IDS CONSTRUTORA E INCORPORADORA","cnpj":"60.220.208/0001-48","tel1":"85989078996","tel2":"","email":"ismaeldaniel482@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"PARQUE MANIBURA","cep":"60.821-800","endereco":"RUA LIDIA BRIGIDO 66, PARQUE MANIBURA, FORTALEZA/CE - CEP 60.821-800","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ISMAEL DANIEL SALES DA SILVA"},{"empresa":"MONTER CONSTRUCOES E NEGOCIOS IMOBILIARIOS LTDA","fantasia":"","cnpj":"60.820.706/0001-21","tel1":"8530918373","tel2":"","email":"mmouraocontabil@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"JOAQUIM TAVORA","cep":"60.120-002","endereco":"AVENIDA BARAO DE STUDART 2360 SALA 1403, JOAQUIM TAVORA, FORTALEZA/CE - CEP 60.120-002","cnae":"Serviços de engenharia","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"SAMILA BARBOSA COSTA MARQUES"},{"empresa":"GBM CONSTRUCOES E INCORPORACOES LTDA","fantasia":"GBM","cnpj":"60.831.538/0001-70","tel1":"85988961972","tel2":"","email":"enioponte@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"EUSEBIO","uf":"CE","bairro":"CENTRO","cep":"61.760-046","endereco":"AVENIDA EUSEBIO DE QUEIROZ 4569 LETRA A, CENTRO, EUSEBIO/CE - CEP 61.760-046","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"ENIO PONTE MOURAO"},{"empresa":"ARCANJOS GRM CONSTRUCOES E LOCACOES LTDA","fantasia":"","cnpj":"61.174.197/0001-70","tel1":"92981379989","tel2":"","email":"docjcfqueiroz@gmail.com","porte":"MICRO EMPRESA","cidade":"FORTALEZA","uf":"CE","bairro":"CENTRO","cep":"60.050-070","endereco":"RUA BARAO DE ARATANHA 275 SALA - 09, CENTRO, FORTALEZA/CE - CEP 60.050-070","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"JULIO CEZAR FURTADO DE QUEIROZ"},{"empresa":"BF CONSTRUCOES LTDA","fantasia":"","cnpj":"61.284.460/0001-83","tel1":"8533364534","tel2":"","email":"bruno.freitas.paulino1999@gmail.com","porte":"MICRO EMPRESA","cidade":"MORADA NOVA","uf":"CE","bairro":"DOIS DE AGOSTO","cep":"62.946-044","endereco":"RUA DIOMEDES BRILHANTE 720, DOIS DE AGOSTO, MORADA NOVA/CE - CEP 62.946-044","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"BRUNO FREITAS PAULINO"},{"empresa":"FLORATTA CONSTRUCOES E INCORPORACOES SPE LTDA","fantasia":"FLORATTA CONSTRUCOES","cnpj":"61.538.497/0001-90","tel1":"85997923153","tel2":"","email":"diogenes_engenharia@hotmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"DIONISIO TORRES","cep":"60.125-001","endereco":"RUA JOSE VILAR 3060 C, DIONISIO TORRES, FORTALEZA/CE - CEP 60.125-001","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"LUCAS DIOGENES FEITOSA"},{"empresa":"CONSTRUTORA E INCORPORADORA VERTICE LTDA","fantasia":"CONSTRUTORA VERTICE","cnpj":"61.669.721/0001-83","tel1":"85989726810","tel2":"","email":"construtoravertice01@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"COCO","cep":"60.192-200","endereco":"AVENIDA ENGENHEIRO SANTANA JUNIOR 3000 906, COCO, FORTALEZA/CE - CEP 60.192-200","cnae":"Construção de edifícios","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"JOAO BATISTA DA SILVA NETO"},{"empresa":"DAMASCENO INCORPORACOES & CONSTRUCOES LTDA","fantasia":"DAMASCENO INCORPORACOES","cnpj":"62.074.460/0001-11","tel1":"85988778515","tel2":"","email":"dannieldamasceno@gmail.com","porte":"MEDIO/GRANDE PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"LAGOA REDONDA","cep":"60.831-340","endereco":"RUA FERREIRA ARAUJO SN, LAGOA REDONDA, FORTALEZA/CE - CEP 60.831-340","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"DANNIEL DAMASCENO CASTELLO BRANCO MOURAO"},{"empresa":"AJ DOIS CONSTRUTORA LTDA","fantasia":"","cnpj":"62.171.646/0001-99","tel1":"8532661323","tel2":"","email":"aj.cavalcante@hotmail.com","porte":"MICRO EMPRESA","cidade":"EUSEBIO","uf":"CE","bairro":"COITE","cep":"61.765-010","endereco":"RUA DO JAPONES SN QUADRA99, COITE, EUSEBIO/CE - CEP 61.765-010","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"ANTONIO JOSE CAVALCANTE RANGEL"},{"empresa":"S&B CONSTRUCOES LTDA","fantasia":"","cnpj":"62.301.362/0001-70","tel1":"85997030275","tel2":"","email":"sbconstrucoesce@gmail.com","porte":"EMPRESA DE PEQUENO PORTE","cidade":"FORTALEZA","uf":"CE","bairro":"CENTRO","cep":"60.025-000","endereco":"RUA SENADOR POMPEU 834 SALA 415, CENTRO, FORTALEZA/CE - CEP 60.025-000","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 360.001,00 a R$ 4.800.000,00","func":"20 A 99 COLABORADORES","socio":"PEDRO HENRIQUE DE SANTANA PEREIRA"},{"empresa":"JMB CONSTRUCOES LTDA","fantasia":"JMB CONSTRUCOES","cnpj":"62.358.861/0001-01","tel1":"85992797237","tel2":"","email":"renatofilho@hotmail.com","porte":"MICRO EMPRESA","cidade":"ITAITINGA","uf":"CE","bairro":"PRQ DOM PEDRO","cep":"61.888-162","endereco":"RUA H 494, PRQ DOM PEDRO, ITAITINGA/CE - CEP 61.888-162","cnae":"Construção de edifícios","fat":"R$ 81.001,00 a R$ 3.600.000,00","func":"3 A 9 COLABORADORES","socio":"RENATO JORGE FERREIRA RIOS FILHO"},{"empresa":"MEDEIROS & SINDEAUX CONSTRUCOES LTDA","fantasia":"","cnpj":"62.451.941/0001-07","tel1":"85984321385","tel2":"","email":"fiscal@trendcontabilidade.com.br","porte":"MEDIO/GRANDE PORTE","cidade":"EUSEBIO","uf":"CE","bairro":"TAMATANDUBA","cep":"61.768-810","endereco":"RUA RAFAEL CARLOS DE MEDEIROS 87, TAMATANDUBA, EUSEBIO/CE - CEP 61.768-810","cnae":"Incorporação de empreendimentos imobiliários","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"SINDEAUX PARTICIPACOES LTDA"},{"empresa":"CONSTRAM - CONSTRUCOES E ALUGUEL DE MAQUINAS LTDA","fantasia":"","cnpj":"72.432.727/0004-00","tel1":"8532240519","tel2":"","email":"financeiro@constram.com.br","porte":"MEDIO/GRANDE PORTE","cidade":"ACARAU","uf":"CE","bairro":"ZONA RURAL","cep":"62.580-000","endereco":"SITIO CORREGO DO BEIJU 0 COMUNIDADE, ZONA RURAL, ACARAU/CE - CEP 62.580-000","cnae":"Construção de edifícios","fat":"R$ 4.800.001,00 a R$ 20.000.000,00","func":"100 A 500 COLABORADORES","socio":"HERCILIA DE SOUZA OLIVEIRA ARAUJO"}];
+
+// ============================================================
+// STATE
+// ============================================================
+let leads = DATA.map((d,i) => ({...d, id: i, ligado: false, obs: ''}));
+let scriptUrl = localStorage.getItem('leads_script_url') || '';
+let remoteData = {};
+let syncOk = false;
+
+let filteredPorte = 'all', filteredCidade = 'all', filteredLigado = 'all';
+let sortField = 'nome', searchTerm = '', currentModal = null;
+
+// ============================================================
+// SYNC — JSONP (funciona com file:// sem CORS)
+// ============================================================
+function jsonpCall(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error('Timeout'));
+    }, 12000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const tag = document.getElementById('jsonp-' + cbName);
+      if (tag) tag.remove();
+      resolve(data);
+    };
+
+    const p = { ...params, callback: cbName };
+    const url = scriptUrl + '?' + new URLSearchParams(p).toString();
+    const script = document.createElement('script');
+    script.id = 'jsonp-' + cbName;
+    script.src = url;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      reject(new Error('Script error'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+async function syncFromServer() {
+  if (!scriptUrl) return;
+  setSyncStatus('loading', 'Sincronizando...');
+  try {
+    const data = await jsonpCall({ action: 'getAll' });
+    if (data && !data.error) {
+      remoteData = data;
+      leads.forEach(l => {
+        if (data[l.cnpj]) {
+          l.ligado = data[l.cnpj].ligado;
+          l.obs = data[l.cnpj].obs || '';
+        }
+      });
+      syncOk = true;
+      setSyncStatus('ok', 'Sincronizado');
+      updateCounts();
+      renderCards();
+    } else {
+      setSyncStatus('err', 'Erro no sync');
+    }
+  } catch(e) {
+    setSyncStatus('err', 'Sem conexão');
+  }
+}
+
+async function syncToServer(cnpj, ligado, obs) {
+  if (!scriptUrl) return;
+  setSyncStatus('loading', 'Salvando...');
+  try {
+    const data = await jsonpCall({ action: 'update', cnpj, ligado, obs });
+    if (data && data.ok) {
+      setSyncStatus('ok', 'Salvo ✓');
+      setTimeout(() => setSyncStatus('ok', 'Sincronizado'), 2000);
+    } else {
+      setSyncStatus('err', 'Erro ao salvar');
+    }
+  } catch(e) {
+    setSyncStatus('err', 'Falha ao salvar');
+  }
+}
+
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function openConfig() {
+  document.getElementById('script-url-input').value = scriptUrl;
+  document.getElementById('config-overlay').classList.add('open');
+}
+
+function closeConfigModal(e) {
+  if (e.target === document.getElementById('config-overlay'))
+    document.getElementById('config-overlay').classList.remove('open');
+}
+
+async function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url) return showToast('Cole a URL do Apps Script primeiro', 'err');
+  scriptUrl = url;
+  localStorage.setItem('leads_script_url', url);
+  document.getElementById('config-overlay').classList.remove('open');
+  showToast('URL salva! Conectando...', 'ok');
+  await syncFromServer();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function formatPhone(tel) {
+  if (!tel || tel === '0') return '';
+  tel = tel.replace(/\D/g,'');
+  if (tel.length === 11) return `(${tel.slice(0,2)}) ${tel.slice(2,7)}-${tel.slice(7)}`;
+  if (tel.length === 10) return `(${tel.slice(0,2)}) ${tel.slice(2,6)}-${tel.slice(6)}`;
+  return tel;
+}
+
+function getPorteShort(p) {
+  if (p.includes('MEDIO')||p.includes('GRANDE')) return 'MEDIO';
+  if (p.includes('PEQUENO')) return 'EPP';
+  return 'MICRO';
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ============================================================
+// COUNTS & FILTERS
+// ============================================================
+function buildCidadeFilters() {
+  const cc = {};
+  leads.forEach(l => { cc[l.cidade] = (cc[l.cidade]||0)+1; });
+  const sorted = Object.entries(cc).sort((a,b)=>b[1]-a[1]);
+  const el = document.getElementById('cidade-filters');
+  el.innerHTML = `<button class="cidade-btn active" onclick="filterCidade('all',this)"><span>Todas</span><span>${leads.length}</span></button>`;
+  sorted.forEach(([c,n]) => {
+    el.innerHTML += `<button class="cidade-btn" onclick="filterCidade('${c}',this)"><span>${c}</span><span>${n}</span></button>`;
+  });
+}
+
+function updateCounts() {
+  const micro = leads.filter(l=>l.porte.includes('MICRO')).length;
+  const epp = leads.filter(l=>l.porte.includes('PEQUENO')).length;
+  const medio = leads.filter(l=>l.porte.includes('MEDIO')||l.porte.includes('GRANDE')).length;
+  document.getElementById('cnt-micro').textContent = micro;
+  document.getElementById('cnt-epp').textContent = epp;
+  document.getElementById('cnt-medio').textContent = medio;
+  const lig = leads.filter(l=>l.ligado).length;
+  const nao = leads.filter(l=>!l.ligado).length;
+  document.getElementById('cnt-lig').textContent = lig;
+  document.getElementById('cnt-nao-lig').textContent = nao;
+  document.getElementById('cnt-todos-lig').textContent = leads.length;
+  document.getElementById('cnt-all').textContent = leads.length;
+  document.getElementById('stat-total').textContent = leads.length;
+  document.getElementById('stat-ligados').textContent = lig;
+  document.getElementById('stat-restantes').textContent = nao;
+  const pct = Math.round((lig/leads.length)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-pct').textContent = pct+'%';
+  document.getElementById('progress-frac').textContent = `${lig} / ${leads.length}`;
+}
+
+function getFiltered() {
+  return leads.filter(l => {
+    if (filteredPorte !== 'all' && l.porte !== filteredPorte) return false;
+    if (filteredCidade !== 'all' && l.cidade !== filteredCidade) return false;
+    if (filteredLigado === 'true' && !l.ligado) return false;
+    if (filteredLigado === 'false' && l.ligado) return false;
+    if (searchTerm) {
+      const s = searchTerm.toLowerCase();
+      if (!l.empresa.toLowerCase().includes(s) && !l.fantasia.toLowerCase().includes(s) &&
+          !l.socio.toLowerCase().includes(s) && !l.cidade.toLowerCase().includes(s) &&
+          !l.cnpj.includes(s) && !l.email.toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+function getSorted(arr) {
+  return [...arr].sort((a,b) => {
+    if (sortField === 'nome') return a.empresa.localeCompare(b.empresa);
+    if (sortField === 'porte') {
+      const o = {'MEDIO/GRANDE PORTE':0,'EMPRESA DE PEQUENO PORTE':1,'MICRO EMPRESA':2};
+      return (o[a.porte]||3)-(o[b.porte]||3);
+    }
+    if (sortField === 'cidade') return a.cidade.localeCompare(b.cidade);
+    return 0;
+  });
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderCards() {
+  const filtered = getSorted(getFiltered());
+  const container = document.getElementById('cards-container');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('result-num').textContent = filtered.length;
+  if (!filtered.length) { container.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  container.innerHTML = filtered.map(l => {
+    const ps = getPorteShort(l.porte);
+    const tel = formatPhone(l.tel1);
+    const tel2 = formatPhone(l.tel2);
+    const nome = l.fantasia || l.empresa;
+    const obsPreview = l.obs ? `<div class="card-obs-preview">💬 ${l.obs.slice(0,80)}${l.obs.length>80?'...':''}</div>` : '';
+    return `
+    <div class="card ${l.ligado?'ligado':''} ${l.obs?'has-obs':''}" onclick="openModal(${l.id})">
+      <div class="card-header">
+        <div class="card-company">${nome}${l.fantasia?`<span class="fantasia">${l.empresa}</span>`:''}</div>
+        <span class="card-porte porte-${ps}">${ps==='MEDIO'?'M/G':ps}</span>
+      </div>
+      <div class="card-info">
+        ${tel?`<div class="info-row"><span class="info-icon">📞</span><span class="info-text phone">${tel}</span></div>`:''}
+        ${tel2&&tel2!==tel?`<div class="info-row"><span class="info-icon">📱</span><span class="info-text phone">${tel2}</span></div>`:''}
+        ${l.email?`<div class="info-row"><span class="info-icon">✉</span><span class="info-text email">${l.email}</span></div>`:''}
+        <div class="info-row"><span class="info-icon">📍</span><span class="info-text muted">${l.bairro}, ${l.cidade}</span></div>
+        <div class="info-row"><span class="info-icon">#</span><span class="info-text cnpj">${l.cnpj}</span></div>
+      </div>
+      ${obsPreview}
+      <div class="card-fat">${l.fat||'—'}</div>
+      <div class="card-footer">
+        <div class="socio-tag">👤 <span>${l.socio||'—'}</span></div>
+        <button class="liga-btn ${l.ligado?'done':''}" onclick="event.stopPropagation();quickToggle(${l.id})">
+          ${l.ligado?'✓ Contatado':'Ligar'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+async function quickToggle(id) {
+  leads[id].ligado = !leads[id].ligado;
+  updateCounts(); renderCards();
+  await syncToServer(leads[id].cnpj, leads[id].ligado, leads[id].obs);
+}
+
+async function toggleLigadoModal() {
+  if (currentModal === null) return;
+  leads[currentModal].ligado = !leads[currentModal].ligado;
+  const l = leads[currentModal];
+  const btn = document.getElementById('modal-liga-btn');
+  btn.textContent = l.ligado ? '✓ Já Contatado' : 'Marcar Contatado';
+  btn.className = 'modal-btn modal-btn-primary' + (l.ligado?' done':'');
+  updateCounts(); renderCards();
+  await syncToServer(l.cnpj, l.ligado, l.obs);
+}
+
+async function saveObs() {
+  if (currentModal === null) return;
+  const obs = document.getElementById('obs-textarea').value.trim();
+  leads[currentModal].obs = obs;
+  const saved = document.getElementById('obs-saved');
+  saved.classList.add('show');
+  setTimeout(() => saved.classList.remove('show'), 2500);
+  renderCards();
+  await syncToServer(leads[currentModal].cnpj, leads[currentModal].ligado, obs);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(id) {
+  const l = leads[id];
+  currentModal = id;
+  const tel1 = formatPhone(l.tel1), tel2 = formatPhone(l.tel2);
+  document.getElementById('modal-empresa').textContent = l.fantasia || l.empresa;
+  document.getElementById('modal-fantasia').textContent = l.fantasia ? `Razão Social: ${l.empresa}` : `CNPJ: ${l.cnpj}`;
+  document.getElementById('modal-tel1').textContent = tel1||'—';
+  document.getElementById('modal-tel2').textContent = (tel2&&tel2!==tel1)?tel2:'—';
+  document.getElementById('modal-email').textContent = l.email||'—';
+  document.getElementById('modal-endereco').textContent = l.endereco;
+  document.getElementById('modal-socio').textContent = l.socio||'—';
+  document.getElementById('modal-cnpj').textContent = l.cnpj;
+  document.getElementById('modal-porte').textContent = l.porte;
+  document.getElementById('modal-func').textContent = l.func||'—';
+  document.getElementById('modal-fat').textContent = l.fat||'—';
+  document.getElementById('modal-cnae').textContent = l.cnae||'—';
+  document.getElementById('obs-textarea').value = l.obs||'';
+  const rawTel = l.tel1.replace(/\D/g,'');
+  const waNum = rawTel.startsWith('55') ? rawTel : '55'+rawTel;
+  document.getElementById('modal-whats').href = rawTel ? `https://wa.me/${waNum}` : '#';
+  document.getElementById('modal-email-btn').href = l.email ? `mailto:${l.email}` : '#';
+  const btn = document.getElementById('modal-liga-btn');
+  btn.textContent = l.ligado ? '✓ Já Contatado' : 'Marcar Contatado';
+  btn.className = 'modal-btn modal-btn-primary' + (l.ligado?' done':'');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) { if (e.target===document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); currentModal=null; }
+
+// ============================================================
+// FILTER CONTROLS
+// ============================================================
+function filterPorte(val, btn) {
+  filteredPorte = val;
+  document.querySelectorAll('[data-porte]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); checkClearBtn(); renderCards();
+}
+function filterCidade(val, btn) {
+  filteredCidade = val;
+  document.querySelectorAll('.cidade-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); checkClearBtn(); renderCards();
+}
+function filterLigado(val, btn) {
+  filteredLigado = val;
+  document.querySelectorAll('[data-ligado]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); checkClearBtn(); renderCards();
+}
+function sortBy(field, btn) {
+  sortField = field;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderCards();
+}
+function checkClearBtn() {
+  const active = filteredPorte!=='all'||filteredCidade!=='all'||filteredLigado!=='all'||searchTerm;
+  document.getElementById('clear-btn').classList.toggle('visible', !!active);
+}
+function clearFilters() {
+  filteredPorte='all'; filteredCidade='all'; filteredLigado='all'; searchTerm='';
+  document.getElementById('search').value='';
+  document.querySelectorAll('[data-porte]').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('.cidade-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('[data-ligado]').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.getElementById('clear-btn').classList.remove('visible');
+  renderCards();
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value.trim(); checkClearBtn(); renderCards();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+buildCidadeFilters();
+updateCounts();
+renderCards();
+
+if (scriptUrl) {
+  setSyncStatus('loading', 'Conectando...');
+  syncFromServer();
+} else {
+  setSyncStatus('', 'Configurar sync');
+}
+
+// Auto-refresh a cada 60 segundos
+setInterval(() => { if(scriptUrl) syncFromServer(); }, 60000);
+</script>
+</body>
+</html>
