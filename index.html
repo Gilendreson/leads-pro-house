@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leads Pro House V1.1</title>
+<title>Leads Pro House V1.2</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -161,6 +161,41 @@
   .modal-field-value.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
   .modal-full { grid-column: 1 / -1; }
 
+  /* STATUS BADGES */
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.4px; text-transform: uppercase; white-space: nowrap; }
+  .status- { background: var(--border); color: var(--muted); }
+  .status-nao_atendeu { background: rgba(255,107,53,0.12); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+  .status-retornar { background: rgba(255,204,68,0.12); color: #ffcc44; border: 1px solid rgba(255,204,68,0.2); }
+  .status-interessado { background: rgba(0,229,160,0.12); color: #00e5a0; border: 1px solid rgba(0,229,160,0.2); }
+  .status-sem_interesse { background: rgba(107,116,148,0.12); color: #6b7494; border: 1px solid rgba(107,116,148,0.2); }
+
+  /* STATUS SELECT */
+  .status-select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 9px 12px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+    cursor: pointer; transition: border-color 0.2s; appearance: none;
+  }
+  .status-select:focus { border-color: var(--accent); }
+
+  /* RESPONSAVEL INPUT */
+  .resp-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 9px 12px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .resp-input:focus { border-color: var(--accent); }
+  .resp-input::placeholder { color: var(--muted); }
+
+  /* EXPORT BTN */
+  .export-btn {
+    background: rgba(79,143,255,0.1); border: 1px solid rgba(79,143,255,0.25);
+    border-radius: 6px; padding: 6px 12px; color: var(--accent2); font-size: 12px;
+    font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .export-btn:hover { background: rgba(79,143,255,0.18); }
+
   /* OBS FIELD */
   .obs-section { margin-bottom: 20px; }
   .obs-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -225,7 +260,7 @@
 <div class="header">
   <div class="header-left">
     <div class="logo">Leads <span>Pro House</span></div>
-    <div class="logo-version">V1.1</div>
+    <div class="logo-version">V1.2</div>
     <div class="sync-status" onclick="openConfig()" title="Configurar sincronização">
       <div class="sync-dot" id="sync-dot"></div>
       <span id="sync-label">Configurar sync</span>
@@ -287,6 +322,28 @@
       </button>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-title">🎯 Status da Ligação</div>
+      <button class="filter-btn active" data-status="all" onclick="filterStatus('all',this)">
+        <span>Todos</span><span class="count" id="cnt-status-all">104</span>
+      </button>
+      <button class="filter-btn" data-status="" onclick="filterStatus('',this)">
+        <span>⬜ Não iniciado</span><span class="count" id="cnt-status-vazio">0</span>
+      </button>
+      <button class="filter-btn" data-status="nao_atendeu" onclick="filterStatus('nao_atendeu',this)">
+        <span>🔴 Não atendeu</span><span class="count" id="cnt-status-nao">0</span>
+      </button>
+      <button class="filter-btn" data-status="retornar" onclick="filterStatus('retornar',this)">
+        <span>🟡 Retornar</span><span class="count" id="cnt-status-ret">0</span>
+      </button>
+      <button class="filter-btn" data-status="interessado" onclick="filterStatus('interessado',this)">
+        <span>🟢 Interessado</span><span class="count" id="cnt-status-int">0</span>
+      </button>
+      <button class="filter-btn" data-status="sem_interesse" onclick="filterStatus('sem_interesse',this)">
+        <span>⚫ Sem interesse</span><span class="count" id="cnt-status-sem">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-title">📈 Progresso</div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
       <div class="progress-label">
@@ -305,6 +362,7 @@
         <button class="sort-btn" id="sort-cidade" onclick="sortBy('cidade',this)">Cidade</button>
       </div>
       <button class="clear-btn" id="clear-btn" onclick="clearFilters()">Limpar filtros ✕</button>
+      <button class="export-btn" onclick="exportExcel()">📥 Exportar Excel</button>
     </div>
     <div class="cards-grid" id="cards-container"></div>
     <div class="empty" id="empty-state" style="display:none">
@@ -360,6 +418,28 @@
       <div class="modal-field modal-full">
         <div class="modal-field-label">🏗️ CNAE</div>
         <div class="modal-field-value" id="modal-cnae">—</div>
+      </div>
+    </div>
+
+    <!-- STATUS + RESPONSAVEL + DATA -->
+    <div class="modal-grid" style="margin-bottom:16px;">
+      <div class="modal-field modal-full">
+        <div class="modal-field-label">🎯 Status da Ligação</div>
+        <select class="status-select" id="modal-status">
+          <option value="">— Não iniciado —</option>
+          <option value="nao_atendeu">🔴 Não atendeu</option>
+          <option value="retornar">🟡 Retornar</option>
+          <option value="interessado">🟢 Interessado</option>
+          <option value="sem_interesse">⚫ Sem interesse</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">👤 Responsável</div>
+        <input type="text" class="resp-input" id="modal-responsavel" placeholder="Seu nome...">
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">📅 Data do Contato</div>
+        <input type="date" class="resp-input" id="modal-data-contato">
       </div>
     </div>
 
@@ -430,13 +510,13 @@ const DATA = [{"empresa":"PROJECON - PROJETOS E CONSTRUCOES LTDA","fantasia":"PR
 // ============================================================
 // STATE
 // ============================================================
-let leads = DATA.map((d,i) => ({...d, id: i, ligado: false, obs: ''}));
+let leads = DATA.map((d,i) => ({...d, id: i, ligado: false, obs: '', status: '', responsavel: '', data_contato: ''}));
 let scriptUrl = localStorage.getItem("leads_script_url") || "";
 let scriptToken = localStorage.getItem("leads_script_token") || "";
 let remoteData = {};
 let syncOk = false;
 
-let filteredPorte = 'all', filteredCidade = 'all', filteredLigado = 'all';
+let filteredPorte = 'all', filteredCidade = 'all', filteredLigado = 'all', filteredStatus = 'all';
 let sortField = 'nome', searchTerm = '', currentModal = null;
 
 // ============================================================
@@ -484,6 +564,9 @@ async function syncFromServer() {
         if (data[l.cnpj]) {
           l.ligado = data[l.cnpj].ligado;
           l.obs = data[l.cnpj].obs || '';
+          l.status = data[l.cnpj].status || '';
+          l.responsavel = data[l.cnpj].responsavel || '';
+          l.data_contato = data[l.cnpj].data_contato || '';
         }
       });
       syncOk = true;
@@ -498,11 +581,11 @@ async function syncFromServer() {
   }
 }
 
-async function syncToServer(cnpj, ligado, obs) {
+async function syncToServer(cnpj, ligado, obs, status, responsavel, data_contato) {
   if (!scriptUrl) return;
   setSyncStatus('loading', 'Salvando...');
   try {
-    const data = await jsonpCall({ action: 'update', cnpj, ligado, obs });
+    const data = await jsonpCall({ action: 'update', cnpj, ligado, obs, status, responsavel, data_contato });
     if (data && data.ok) {
       setSyncStatus('ok', 'Salvo ✓');
       setTimeout(() => setSyncStatus('ok', 'Sincronizado'), 2000);
@@ -607,6 +690,13 @@ function updateCounts() {
   document.getElementById('progress-fill').style.width = pct+'%';
   document.getElementById('progress-pct').textContent = pct+'%';
   document.getElementById('progress-frac').textContent = `${lig} / ${leads.length}`;
+  // status counts
+  document.getElementById('cnt-status-all').textContent = leads.length;
+  document.getElementById('cnt-status-vazio').textContent = leads.filter(l=>!l.status).length;
+  document.getElementById('cnt-status-nao').textContent = leads.filter(l=>l.status==='nao_atendeu').length;
+  document.getElementById('cnt-status-ret').textContent = leads.filter(l=>l.status==='retornar').length;
+  document.getElementById('cnt-status-int').textContent = leads.filter(l=>l.status==='interessado').length;
+  document.getElementById('cnt-status-sem').textContent = leads.filter(l=>l.status==='sem_interesse').length;
 }
 
 function getFiltered() {
@@ -615,11 +705,13 @@ function getFiltered() {
     if (filteredCidade !== 'all' && l.cidade !== filteredCidade) return false;
     if (filteredLigado === 'true' && !l.ligado) return false;
     if (filteredLigado === 'false' && l.ligado) return false;
+    if (filteredStatus !== 'all' && l.status !== filteredStatus) return false;
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       if (!l.empresa.toLowerCase().includes(s) && !l.fantasia.toLowerCase().includes(s) &&
           !l.socio.toLowerCase().includes(s) && !l.cidade.toLowerCase().includes(s) &&
-          !l.cnpj.includes(s) && !l.email.toLowerCase().includes(s)) return false;
+          !l.cnpj.includes(s) && !l.email.toLowerCase().includes(s) &&
+          !l.obs.toLowerCase().includes(s)) return false;
     }
     return true;
   });
@@ -647,12 +739,15 @@ function renderCards() {
   document.getElementById('result-num').textContent = filtered.length;
   if (!filtered.length) { container.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
+  const statusLabel = {'nao_atendeu':'Não atendeu','retornar':'Retornar','interessado':'Interessado','sem_interesse':'Sem interesse'};
   container.innerHTML = filtered.map(l => {
     const ps = getPorteShort(l.porte);
     const tel = formatPhone(l.tel1);
     const tel2 = formatPhone(l.tel2);
     const nome = l.fantasia || l.empresa;
     const obsPreview = l.obs ? `<div class="card-obs-preview">💬 ${l.obs.slice(0,80)}${l.obs.length>80?'...':''}</div>` : '';
+    const statusBadge = l.status ? `<span class="status-badge status-${l.status}">${statusLabel[l.status]||l.status}</span>` : '';
+    const respInfo = l.responsavel ? `<div class="info-row"><span class="info-icon">👤</span><span class="info-text muted">${l.responsavel}${l.data_contato?' · '+l.data_contato:''}</span></div>` : '';
     return `
     <div class="card ${l.ligado?'ligado':''} ${l.obs?'has-obs':''}" onclick="openModal(${l.id})">
       <div class="card-header">
@@ -665,9 +760,13 @@ function renderCards() {
         ${l.email?`<div class="info-row"><span class="info-icon">✉</span><span class="info-text email">${l.email}</span></div>`:''}
         <div class="info-row"><span class="info-icon">📍</span><span class="info-text muted">${l.bairro}, ${l.cidade}</span></div>
         <div class="info-row"><span class="info-icon">#</span><span class="info-text cnpj">${l.cnpj}</span></div>
+        ${respInfo}
       </div>
       ${obsPreview}
-      <div class="card-fat">${l.fat||'—'}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        ${statusBadge || '<span></span>'}
+        <span class="card-fat">${l.fat||'—'}</span>
+      </div>
       <div class="card-footer">
         <div class="socio-tag">👤 <span>${l.socio||'—'}</span></div>
         <button class="liga-btn ${l.ligado?'done':''}" onclick="event.stopPropagation();quickToggle(${l.id})">
@@ -683,30 +782,43 @@ function renderCards() {
 // ============================================================
 async function quickToggle(id) {
   leads[id].ligado = !leads[id].ligado;
+  if (leads[id].ligado && !leads[id].data_contato) {
+    leads[id].data_contato = new Date().toISOString().split('T')[0];
+  }
   updateCounts(); renderCards();
-  await syncToServer(leads[id].cnpj, leads[id].ligado, leads[id].obs);
+  const l = leads[id];
+  await syncToServer(l.cnpj, l.ligado, l.obs, l.status, l.responsavel, l.data_contato);
 }
 
 async function toggleLigadoModal() {
   if (currentModal === null) return;
   leads[currentModal].ligado = !leads[currentModal].ligado;
+  if (leads[currentModal].ligado && !leads[currentModal].data_contato) {
+    const today = new Date().toISOString().split('T')[0];
+    leads[currentModal].data_contato = today;
+    document.getElementById('modal-data-contato').value = today;
+  }
   const l = leads[currentModal];
   const btn = document.getElementById('modal-liga-btn');
   btn.textContent = l.ligado ? '✓ Já Contatado' : 'Marcar Contatado';
   btn.className = 'modal-btn modal-btn-primary' + (l.ligado?' done':'');
   updateCounts(); renderCards();
-  await syncToServer(l.cnpj, l.ligado, l.obs);
+  await syncToServer(l.cnpj, l.ligado, l.obs, l.status, l.responsavel, l.data_contato);
 }
 
 async function saveObs() {
   if (currentModal === null) return;
-  const obs = document.getElementById('obs-textarea').value.trim();
-  leads[currentModal].obs = obs;
+  const l = leads[currentModal];
+  l.obs = document.getElementById('obs-textarea').value.trim();
+  l.status = document.getElementById('modal-status').value;
+  l.responsavel = document.getElementById('modal-responsavel').value.trim();
+  l.data_contato = document.getElementById('modal-data-contato').value;
+  if (l.status && !l.ligado) { l.ligado = true; }
   const saved = document.getElementById('obs-saved');
   saved.classList.add('show');
   setTimeout(() => saved.classList.remove('show'), 2500);
-  renderCards();
-  await syncToServer(leads[currentModal].cnpj, leads[currentModal].ligado, obs);
+  updateCounts(); renderCards();
+  await syncToServer(l.cnpj, l.ligado, l.obs, l.status, l.responsavel, l.data_contato);
 }
 
 // ============================================================
@@ -729,6 +841,9 @@ function openModal(id) {
   document.getElementById('modal-fat').textContent = l.fat||'—';
   document.getElementById('modal-cnae').textContent = l.cnae||'—';
   document.getElementById('obs-textarea').value = l.obs||'';
+  document.getElementById('modal-status').value = l.status||'';
+  document.getElementById('modal-responsavel').value = l.responsavel||'';
+  document.getElementById('modal-data-contato').value = l.data_contato||'';
   const rawTel = l.tel1.replace(/\D/g,'');
   const waNum = rawTel.startsWith('55') ? rawTel : '55'+rawTel;
   document.getElementById('modal-whats').href = rawTel ? `https://wa.me/${waNum}` : '#';
@@ -745,6 +860,37 @@ function closeModalDirect() { document.getElementById('modal-overlay').classList
 // ============================================================
 // FILTER CONTROLS
 // ============================================================
+function filterStatus(val, btn) {
+  filteredStatus = val;
+  document.querySelectorAll('[data-status]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); checkClearBtn(); renderCards();
+}
+
+function exportExcel() {
+  const filtered = getSorted(getFiltered());
+  const statusLabel = {'nao_atendeu':'Não atendeu','retornar':'Retornar','interessado':'Interessado','sem_interesse':'Sem interesse','':'Não iniciado'};
+  const rows = [
+    ['Empresa','Fantasia','CNPJ','Telefone 1','Telefone 2','E-mail','Sócio','Porte','Cidade','Bairro','Endereço','Faturamento','Funcionários','CNAE','Status','Responsável','Data Contato','Observações']
+  ];
+  filtered.forEach(l => {
+    rows.push([
+      l.empresa, l.fantasia, l.cnpj,
+      formatPhone(l.tel1), formatPhone(l.tel2), l.email,
+      l.socio, l.porte, l.cidade, l.bairro, l.endereco,
+      l.fat, l.func, l.cnae,
+      statusLabel[l.status]||'Não iniciado',
+      l.responsavel, l.data_contato, l.obs
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${(c||'').toString().replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `leads_pro_house_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`${filtered.length} leads exportados ✓`, 'ok');
+}
+
 function filterPorte(val, btn) {
   filteredPorte = val;
   document.querySelectorAll('[data-porte]').forEach(b=>b.classList.remove('active'));
@@ -766,15 +912,16 @@ function sortBy(field, btn) {
   btn.classList.add('active'); renderCards();
 }
 function checkClearBtn() {
-  const active = filteredPorte!=='all'||filteredCidade!=='all'||filteredLigado!=='all'||searchTerm;
+  const active = filteredPorte!=='all'||filteredCidade!=='all'||filteredLigado!=='all'||filteredStatus!=='all'||searchTerm;
   document.getElementById('clear-btn').classList.toggle('visible', !!active);
 }
 function clearFilters() {
-  filteredPorte='all'; filteredCidade='all'; filteredLigado='all'; searchTerm='';
+  filteredPorte='all'; filteredCidade='all'; filteredLigado='all'; filteredStatus='all'; searchTerm='';
   document.getElementById('search').value='';
   document.querySelectorAll('[data-porte]').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('.cidade-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('[data-ligado]').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.querySelectorAll('[data-status]').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.getElementById('clear-btn').classList.remove('visible');
   renderCards();
 }
